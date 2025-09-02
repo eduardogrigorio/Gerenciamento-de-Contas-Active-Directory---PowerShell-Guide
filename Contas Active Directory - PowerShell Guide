@@ -1,0 +1,145 @@
+# 📘 Gerenciamento de Contas Active Directory - PowerShell Guide
+
+📋 Descrição
+Coleção de comandos PowerShell essenciais para gerenciamento de contas no Active Directory, incluindo desbloqueio, habilitação e verificação de status de usuários.
+
+🚀 Comandos Principais:
+
+🔓 Desbloquear Conta
+powershell
+Unlock-ADAccount -Identity "nome.do.usuario"
+Desbloqueia conta travada por excesso de tentativas de login
+
+✅ Habilitar Conta
+powershell
+Enable-ADAccount -Identity "nome.do.usuario"
+Reativa conta desabilitada no AD
+
+📊 Verificar Status da Conta
+powershell
+Get-ADUser -Identity "nome.do.usuario" -Properties LockedOut, LastBadPasswordAttempt, BadLogonCount, Enabled
+
+🔍 Exemplo Prático
+powershell
+# Verificar status completo
+$user = "joao.silva"
+Get-ADUser -Identity $user -Properties LockedOut, Enabled, LastBadPasswordAttempt, BadLogonCount
+
+# Ação corretiva
+if ((Get-ADUser -Identity $user -Properties LockedOut).LockedOut) {
+    Unlock-ADAccount -Identity $user
+    Write-Host "Conta desbloqueada: $user" -ForegroundColor Green
+}
+
+if (-not ((Get-ADUser -Identity $user -Properties Enabled).Enabled)) {
+    Enable-ADAccount -Identity $user
+    Write-Host "Conta habilitada: $user" -ForegroundColor Green
+}
+📦 Pré-requisitos
+powershell
+# Instalar módulo AD
+Install-WindowsFeature RSAT-AD-PowerShell
+
+# Importar módulo
+Import-Module ActiveDirectory
+🛠️ Comandos Adicionais Úteis
+🔎 Encontrar Todas as Contas Bloqueadas
+powershell
+Search-ADAccount -LockedOut | Select-Object Name, SamAccountName, LastLogonDate
+
+
+📈 Reiniciar Contador de Tentativas
+powershell
+Set-ADUser -Identity "user" -BadLogonCount 0
+👥 Gerenciamento em Massa
+powershell
+# Desbloquear múltiplas contas
+Get-Content .\users.txt | ForEach-Object { Unlock-ADAccount -Identity $_ }
+⚠️ Troubleshooting
+❌ Erro Comum: Módulo Não Encontrado
+powershell
+# Solução: Instalar RSAT
+Add-WindowsCapability -Online -Name Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0
+❌ Erro: Permissões Insuficientes
+powershell
+# Verificar permissões
+Get-ADUser -Identity $env:USERNAME -Properties MemberOf | Select-Object MemberOf
+📊 Exemplo de Saída
+text
+Name            : João Silva
+SamAccountName  : joao.silva
+LockedOut       : True
+Enabled         : False
+LastBadPasswordAttempt: 2024-03-20 14:30:22
+BadLogonCount   : 5
+
+🏆 Boas Práticas
+✅ Sempre verifique o status antes de agir
+
+✅ Use variáveis para nomes de usuário
+
+✅ Registre as ações em log
+
+✅ Teste em ambiente de desenvolvimento primeiro
+
+📝 Script Completo
+powershell
+<#
+.SYNOPSIS
+    Script para gerenciamento de contas AD
+.DESCRIPTION
+    Desbloqueia e habilita contas AD com verificação de status
+.PARAMETER Username
+    Nome do usuário para gerenciamento
+.EXAMPLE
+    .\Manage-ADAccount.ps1 -Username "joao.silva"
+#>
+
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$Username
+)
+
+try {
+    $user = Get-ADUser -Identity $Username -Properties LockedOut, Enabled, LastBadPasswordAttempt, BadLogonCount -ErrorAction Stop
+    
+    Write-Host "Status da conta $Username" -ForegroundColor Cyan
+    Write-Host "LockedOut: $($user.LockedOut)"
+    Write-Host "Enabled: $($user.Enabled)"
+    Write-Host "BadLogonCount: $($user.BadLogonCount)"
+    Write-Host "LastBadPasswordAttempt: $($user.LastBadPasswordAttempt)"
+    
+    if ($user.LockedOut) {
+        Unlock-ADAccount -Identity $Username
+        Write-Host "Conta desbloqueada com sucesso!" -ForegroundColor Green
+    }
+    
+    if (-not $user.Enabled) {
+        Enable-ADAccount -Identity $Username
+        Write-Host "Conta habilitada com sucesso!" -ForegroundColor Green
+    }
+}
+catch {
+    Write-Host "Erro: $($_.Exception.Message)" -ForegroundColor Red
+}
+📊 Tabela de Códigos de Erro Comuns
+Código	Descrição	Solução
+5	Acesso Negado	Executar como Administrator
+87	Parâmetro Inválido	Verificar syntax do comando
+1331	Conta Desabilitada	Usar Enable-ADAccount
+
+
+🌟 Contribuição
+Contribuições são bem-vindas! Sinta-se à vontade para:
+
+Fazer fork do repositório
+
+Criar um branch para sua feature
+
+Commit suas mudanças
+
+Abrir um Pull Request
+
+📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo LICENSE para detalhes.
